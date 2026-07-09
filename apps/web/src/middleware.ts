@@ -1,19 +1,31 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
-const isClientRoute = createRouteMatcher(["/cliente(.*)"]);
-const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)"]);
+const hasClerkKey =
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY !== "placeholder";
 
-export default clerkMiddleware(async (auth, req) => {
-  // Admin routes require auth
-  if (isAdminRoute(req)) {
-    await auth.protect();
+function buildMiddleware() {
+  if (!hasClerkKey) {
+    return function noopMiddleware() {
+      return NextResponse.next();
+    };
   }
-  // Client routes require auth
-  if (isClientRoute(req)) {
-    await auth.protect();
-  }
-});
+
+  const { clerkMiddleware, createRouteMatcher } = require("@clerk/nextjs/server");
+  const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+  const isClientRoute = createRouteMatcher(["/cliente(.*)"]);
+
+  return clerkMiddleware(async (auth: any, req: NextRequest) => {
+    if (isAdminRoute(req)) {
+      await auth.protect();
+    }
+    if (isClientRoute(req)) {
+      await auth.protect();
+    }
+  });
+}
+
+export default buildMiddleware();
 
 export const config = {
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
