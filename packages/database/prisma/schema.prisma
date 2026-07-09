@@ -23,6 +23,7 @@ enum Modulo {
   PORTAL_CLIENTE
   AUDITORIA
   MANAGEMENT
+  COTIZACIONES_FERRETERIA
 }
 
 enum TipoObra {
@@ -204,6 +205,8 @@ model User {
   conversaciones    ConversacionAgente[]
   auditorias        AuditoriaEvento[]
   publicaciones     PublicacionCliente[]
+  rondasCotizacion  RondaCotizacion[]
+  facturasMixtas    FacturaMixta[]
 }
 
 model Proyecto {
@@ -238,6 +241,7 @@ model Proyecto {
   conversaciones        ConversacionAgente[]
   conflictos            ConflictoConocimiento[]
   auditorias            AuditoriaEvento[]
+  rondasCotizacion      RondaCotizacion[]
 }
 
 model ProyectoCliente {
@@ -493,8 +497,9 @@ model ListaCantidades {
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
 
-  lineas       LineaCantidad[]
-  presupuestos Presupuesto[]
+  lineas           LineaCantidad[]
+  presupuestos     Presupuesto[]
+  rondasCotizacion RondaCotizacion[]
 }
 
 model LineaCantidad {
@@ -617,4 +622,120 @@ model AuditoriaEvento {
 
   @@index([proyectoId])
   @@index([createdAt])
+}
+
+enum RondaCotizacionEstado {
+  BORRADOR
+  ENVIADA_FERRETERIAS
+  EN_COMPARACION
+  CERRADA
+}
+
+model RondaCotizacion {
+  id                String                @id @default(cuid())
+  proyectoId        String
+  proyecto          Proyecto              @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  listaCantidadesId String?
+  listaCantidades   ListaCantidades?      @relation(fields: [listaCantidadesId], references: [id])
+  nombre            String
+  estado            RondaCotizacionEstado @default(BORRADOR)
+  creadoPor         String
+  creador           User                  @relation(fields: [creadoPor], references: [id])
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  lineasMaterial LineaMaterial[]
+  ferreterias    Ferreteria[]
+  cotizaciones   CotizacionFerreteria[]
+  facturaMixta   FacturaMixta?
+}
+
+model LineaMaterial {
+  id            String          @id @default(cuid())
+  rondaId       String
+  ronda         RondaCotizacion @relation(fields: [rondaId], references: [id], onDelete: Cascade)
+  origenPartida String?
+  descripcion   String
+  unidad        String
+  cantidad      Float
+  categoria     String?
+  createdAt     DateTime        @default(now())
+
+  matches       LineaCotizacionFerreteria[]
+  lineasFactura LineaFacturaMixta[]
+}
+
+model Ferreteria {
+  id        String          @id @default(cuid())
+  rondaId   String
+  ronda     RondaCotizacion @relation(fields: [rondaId], references: [id], onDelete: Cascade)
+  nombre    String
+  contacto  String?
+  telefono  String?
+  email     String?
+  createdAt DateTime        @default(now())
+
+  cotizaciones    CotizacionFerreteria[]
+  lineasGanadoras LineaFacturaMixta[]
+}
+
+model CotizacionFerreteria {
+  id                  String              @id @default(cuid())
+  rondaId             String
+  ronda               RondaCotizacion     @relation(fields: [rondaId], references: [id], onDelete: Cascade)
+  ferreteriaId        String
+  ferreteria          Ferreteria          @relation(fields: [ferreteriaId], references: [id], onDelete: Cascade)
+  archivoUrl          String
+  archivoNombre       String
+  formato             String
+  moneda              Moneda              @default(CRC)
+  estadoProcesamiento ProcesamientoEstado @default(PENDIENTE)
+  metadataJson        Json?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  lineas LineaCotizacionFerreteria[]
+}
+
+model LineaCotizacionFerreteria {
+  id                  String               @id @default(cuid())
+  cotizacionId        String
+  cotizacion          CotizacionFerreteria @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
+  lineaMaterialId     String?
+  lineaMaterial       LineaMaterial?       @relation(fields: [lineaMaterialId], references: [id], onDelete: SetNull)
+  descripcionOriginal String
+  unidad              String?
+  cantidad            Float?
+  precioUnitario      Float
+  subtotal            Float
+  matchConfianza      Float?
+  matchManual         Boolean              @default(false)
+  createdAt           DateTime             @default(now())
+}
+
+model FacturaMixta {
+  id               String          @id @default(cuid())
+  rondaId          String          @unique
+  ronda            RondaCotizacion @relation(fields: [rondaId], references: [id], onDelete: Cascade)
+  totalOptimizado  Float
+  totalMejorGlobal Float
+  ahorroEstimado   Float
+  generadoPor      String
+  generador        User            @relation(fields: [generadoPor], references: [id])
+  createdAt        DateTime        @default(now())
+
+  lineas LineaFacturaMixta[]
+}
+
+model LineaFacturaMixta {
+  id              String       @id @default(cuid())
+  facturaMixtaId  String
+  facturaMixta    FacturaMixta @relation(fields: [facturaMixtaId], references: [id], onDelete: Cascade)
+  lineaMaterialId String
+  lineaMaterial   LineaMaterial @relation(fields: [lineaMaterialId], references: [id])
+  ferreteriaId    String
+  ferreteria      Ferreteria   @relation(fields: [ferreteriaId], references: [id])
+  cantidad        Float
+  precioUnitario  Float
+  subtotal        Float
 }

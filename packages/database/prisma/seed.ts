@@ -14,9 +14,16 @@ const ALL_MODULOS: Modulo[] = [
   "PORTAL_CLIENTE",
   "AUDITORIA",
   "MANAGEMENT",
+  "COTIZACIONES_FERRETERIA",
 ];
 
-const KEILOR_MODULOS: Modulo[] = ["LAMINAS", "CTK", "PRESUPUESTO", "PORTAL_CLIENTE"];
+const KEILOR_MODULOS: Modulo[] = [
+  "LAMINAS",
+  "CTK",
+  "PRESUPUESTO",
+  "PORTAL_CLIENTE",
+  "COTIZACIONES_FERRETERIA",
+];
 
 function loadPackFile(filename: string) {
   const paths = [

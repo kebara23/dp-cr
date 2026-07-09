@@ -118,6 +118,95 @@ export function resolverConflicto(reglaA: string, reglaB: string): AgentToolResu
   };
 }
 
+export interface PrecioContextoItem {
+  descripcion: string;
+  unidad: string;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+  ferreteria: string;
+}
+
+export function aplicarPrecio(
+  cantidad: number,
+  precioUnitario: number,
+  descripcion?: string,
+  ferreteria?: string
+): AgentToolResult {
+  if (!Number.isFinite(cantidad) || !Number.isFinite(precioUnitario) || precioUnitario < 0) {
+    return { success: false, fuentes: [], confianza: 0, data: { error: "Precio o cantidad inválidos" } };
+  }
+  const subtotal = Math.round(cantidad * precioUnitario * 100) / 100;
+  return {
+    success: true,
+    data: {
+      descripcion: descripcion ?? "material",
+      cantidad,
+      precioUnitario,
+      subtotal,
+      ferreteria: ferreteria ?? null,
+    },
+    fuentes: [
+      {
+        tipo: "precio",
+        referencia: ferreteria ?? "cotizacion",
+        detalle: descripcion ?? undefined,
+      },
+    ],
+    confianza: ferreteria ? 0.9 : 0.75,
+  };
+}
+
+export function buscarPrecioEnContexto(
+  query: string,
+  items: PrecioContextoItem[]
+): AgentToolResult {
+  if (!items.length) {
+    return {
+      success: false,
+      fuentes: [],
+      confianza: 0,
+      data: { error: "No hay factura mixta / precios de ferretería en el proyecto" },
+    };
+  }
+
+  const q = query.toLowerCase();
+  const match =
+    items.find((i) => q.includes(i.descripcion.toLowerCase().slice(0, 12))) ??
+    items.find((i) =>
+      i.descripcion
+        .toLowerCase()
+        .split(/\s+/)
+        .some((w) => w.length > 3 && q.includes(w))
+    );
+
+  if (!match) {
+    const total = items.reduce((s, i) => s + i.subtotal, 0);
+    return {
+      success: true,
+      data: {
+        resumen: true,
+        totalOptimizado: Math.round(total * 100) / 100,
+        items: items.slice(0, 8).map((i) => ({
+          descripcion: i.descripcion,
+          ferreteria: i.ferreteria,
+          precioUnitario: i.precioUnitario,
+          subtotal: i.subtotal,
+        })),
+      },
+      fuentes: [{ tipo: "precio", referencia: "FacturaMixta" }],
+      confianza: 0.8,
+    };
+  }
+
+  return aplicarPrecio(
+    match.cantidad,
+    match.precioUnitario,
+    match.descripcion,
+    match.ferreteria
+  );
+}
+
 function detectIntent(pregunta: string): { tool: AgentToolName; params: Record<string, unknown> } | null {
   const p = pregunta.toLowerCase();
 
@@ -194,6 +283,16 @@ function detectIntent(pregunta: string): { tool: AgentToolName; params: Record<s
   ) {
     return { tool: "consultar_tabla", params: { tablaId: "TECHO_ZINC", clave: "area_planta", focus: "area_total" } };
   }
+  if (
+    p.includes("precio") ||
+    p.includes("cuesta") ||
+    p.includes("cotiz") ||
+    p.includes("ferreter") ||
+    p.includes("barato") ||
+    p.includes("factura mixta")
+  ) {
+    return { tool: "aplicar_precio", params: { query: pregunta } };
+  }
 
   return null;
 }
@@ -220,12 +319,29 @@ export function ejecutarTool(tool: AgentToolName, params: Record<string, unknown
         confianza: 0.7,
         requiereValidacion: true,
       };
+    case "aplicar_precio": {
+      const items = (params.items as PrecioContextoItem[] | undefined) ?? [];
+      if (items.length > 0) {
+        return buscarPrecioEnContexto(String(params.query ?? ""), items);
+      }
+      const cantidad = Number(params.cantidad ?? 1);
+      const precioUnitario = Number(params.precioUnitario ?? 0);
+      return aplicarPrecio(
+        cantidad,
+        precioUnitario,
+        params.descripcion as string | undefined,
+        params.ferreteria as string | undefined
+      );
+    }
     default:
       return { success: false, fuentes: [], confianza: 0 };
   }
 }
 
-export function procesarPregunta(pregunta: string): AgentResponse {
+export function procesarPregunta(
+  pregunta: string,
+  contexto?: { preciosFerreteria?: PrecioContextoItem[] }
+): AgentResponse {
   const intent = detectIntent(pregunta);
 
   if (!intent) {
@@ -256,11 +372,22 @@ export function procesarPregunta(pregunta: string): AgentResponse {
     };
   }
 
-  const result = ejecutarTool(intent.tool, intent.params);
+  const toolParams =
+    intent.tool === "aplicar_precio"
+      ? {
+          ...intent.params,
+          items: contexto?.preciosFerreteria ?? [],
+        }
+      : intent.params;
+
+  const result = ejecutarTool(intent.tool, toolParams);
 
   if (!result.success) {
     return {
-      respuesta: "No pude obtener datos para esta consulta.",
+      respuesta:
+        intent.tool === "aplicar_precio"
+          ? "No hay factura mixta de ferreterías en este proyecto. Genere una ronda de cotizaciones, suba ofertas y cree la factura mixta."
+          : "No pude obtener datos para esta consulta.",
       fundamento: `Herramienta ${intent.tool} sin resultados.`,
       fuentes: result.fuentes,
       confianza: 0,
@@ -272,6 +399,22 @@ export function procesarPregunta(pregunta: string): AgentResponse {
   const data = result.data as Record<string, unknown>;
 
   switch (intent.tool) {
+    case "aplicar_precio":
+      if (data.resumen) {
+        const items = (data.items as Array<Record<string, unknown>>) ?? [];
+        const lineas = items
+          .map(
+            (i) =>
+              `• ${i.descripcion}: ₡${Number(i.precioUnitario).toLocaleString("es-CR")} en ${i.ferreteria}`
+          )
+          .join("\n");
+        respuesta = `Según la factura mixta del proyecto, total optimizado ≈ ₡${Number(data.totalOptimizado).toLocaleString("es-CR")}.\n\n${lineas}`;
+      } else {
+        respuesta = `${data.descripcion}: ${data.cantidad} × ₡${Number(data.precioUnitario).toLocaleString("es-CR")} = ₡${Number(data.subtotal).toLocaleString("es-CR")}${
+          data.ferreteria ? ` (mejor precio en ${data.ferreteria})` : ""
+        }.`;
+      }
+      break;
     case "calcular_dosificacion":
       respuesta = `Para ${intent.params.volumen} m³ de concreto f'c=${intent.params.fc} kg/cm²: ${data.sacosCemento} sacos de cemento, ${data.m3Arena} m³ arena, ${data.m3Piedra} m³ piedra.`;
       break;

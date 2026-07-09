@@ -13,8 +13,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       request,
       onBeforeGenerateToken: async (pathname) => {
         await requireSession(["ADMIN"]);
-        // Keep uploads under laminas/ for organization
-        if (!pathname.startsWith("laminas/")) {
+        const prefijosValidos = ["laminas/", "cotizaciones/"];
+        if (!prefijosValidos.some((p) => pathname.startsWith(p))) {
           throw new Error("pathname inválido");
         }
         return {
@@ -23,8 +23,10 @@ export async function POST(request: Request): Promise<NextResponse> {
             "image/png",
             "image/jpeg",
             "image/jpg",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-excel",
           ],
-          // 100 MB — planos reales
+          // 100 MB — planos reales / cotizaciones
           maximumSizeInBytes: 100 * 1024 * 1024,
           addRandomSuffix: true,
         };

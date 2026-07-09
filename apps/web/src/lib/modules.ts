@@ -4,6 +4,7 @@ export const ALL_NAV_ITEMS = [
   { href: "/admin/ctk", label: "CTK", icon: "📚", modulo: "CTK" },
   { href: "/admin/motor", label: "Motor Metrado", icon: "🔧", modulo: "MOTOR_METRADO" },
   { href: "/admin/presupuesto", label: "Presupuesto", icon: "💰", modulo: "PRESUPUESTO" },
+  { href: "/admin/cotizaciones", label: "Cotizaciones", icon: "🧾", modulo: "COTIZACIONES_FERRETERIA" },
   { href: "/admin/chat", label: "Agente IA", icon: "🤖", modulo: "AGENTE_IA" },
   { href: "/admin/auditoria", label: "Auditoría", icon: "📋", modulo: "AUDITORIA" },
   { href: "/admin/management", label: "Management", icon: "⚙️", modulo: "MANAGEMENT" },

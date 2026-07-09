@@ -77,7 +77,8 @@ export type ModuloApp =
   | "AGENTE_IA"
   | "PORTAL_CLIENTE"
   | "AUDITORIA"
-  | "MANAGEMENT";
+  | "MANAGEMENT"
+  | "COTIZACIONES_FERRETERIA";
 
 export interface MetradoInput {
   partidaCodigo: string;

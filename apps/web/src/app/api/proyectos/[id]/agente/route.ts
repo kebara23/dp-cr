@@ -61,7 +61,25 @@ export async function POST(
       },
     });
 
-    const respuesta = procesarPregunta(parsed.data.mensaje);
+    const factura = await prisma.facturaMixta.findFirst({
+      where: { ronda: { proyectoId } },
+      orderBy: { createdAt: "desc" },
+      include: {
+        lineas: { include: { lineaMaterial: true, ferreteria: true } },
+      },
+    });
+
+    const preciosFerreteria =
+      factura?.lineas.map((l) => ({
+        descripcion: l.lineaMaterial.descripcion,
+        unidad: l.lineaMaterial.unidad,
+        cantidad: l.cantidad,
+        precioUnitario: l.precioUnitario,
+        subtotal: l.subtotal,
+        ferreteria: l.ferreteria.nombre,
+      })) ?? [];
+
+    const respuesta = procesarPregunta(parsed.data.mensaje, { preciosFerreteria });
 
     const mensajeAgente = await prisma.mensajeAgente.create({
       data: {

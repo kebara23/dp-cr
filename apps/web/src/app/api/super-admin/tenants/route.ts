@@ -12,6 +12,7 @@ const ALL_MODULOS: Modulo[] = [
   "PORTAL_CLIENTE",
   "AUDITORIA",
   "MANAGEMENT",
+  "COTIZACIONES_FERRETERIA",
 ];
 
 export async function GET() {

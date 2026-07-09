@@ -12,6 +12,7 @@ const MODULOS = [
   "PORTAL_CLIENTE",
   "AUDITORIA",
   "MANAGEMENT",
+  "COTIZACIONES_FERRETERIA",
 ] as const;
 
 export default function NuevoTenantPage() {

@@ -7,6 +7,8 @@ export * from "./techo";
 export * from "./ventanas";
 export * from "./mamposteria";
 export * from "./pintura";
+export * from "./materiales";
+export * from "./factura-mixta";
 
 import { calcularAreaConDesperdicio } from "./techo";
 
