@@ -1,0 +1,29 @@
+{
+  "name": "dp-cr",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Plataforma de ingenieria civil con CTK y agente IA (MVP slice vertical)",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:generate": "pnpm --filter @dp/database generate",
+    "db:migrate": "pnpm --filter @dp/database migrate",
+    "db:push": "pnpm --filter @dp/database push",
+    "db:seed": "pnpm --filter @dp/database seed",
+    "db:studio": "pnpm --filter @dp/database studio",
+    "infra:up": "docker-compose up -d",
+    "infra:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2",
+    "prettier": "^3.4.2"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "documento": {
+    "titulo": "Dosificaciones de concreto (Notas Generales)",
+    "disciplina": "estructura",
+    "fuente": "pack:cr-residencial-v1"
+  },
+  "tablas": [
+    {
+      "tabla": "dosificaciones",
+      "clave": "210",
+      "valores": {
+        "resistencia_kg_cm2": 210,
+        "cemento_sacos_por_m3": 9.5,
+        "arena_m3_por_m3": 0.5,
+        "piedra_m3_por_m3": 0.75,
+        "usos": "Columnas, vigas, cimientos, muros, contrapisos",
+        "agua_potable": true
+      }
+    },
+    {
+      "tabla": "dosificaciones",
+      "clave": "175",
+      "valores": {
+        "resistencia_kg_cm2": 175,
+        "cemento_sacos_por_m3": 8.0,
+        "arena_m3_por_m3": 0.5,
+        "piedra_m3_por_m3": 0.75,
+        "usos": "Repello segun norma C270, cajas"
+      }
+    },
+    {
+      "tabla": "dosificaciones",
+      "clave": "140",
+      "valores": {
+        "resistencia_kg_cm2": 140,
+        "cemento_sacos_por_m3": 6.5,
+        "arena_m3_por_m3": 0.5,
+        "piedra_m3_por_m3": 0.75,
+        "usos": "Aceras"
+      }
+    }
+  ],
+  "reglas": [
+    {
+      "codigo": "NG-01",
+      "textoOriginal": "El concreto se dosifica segun tabla de mezclas. Usar agua potable, limpia. La superficie curada usa una capa de sellador 522-000, 528-000.",
+      "categoria": "mezcla",
+      "disciplina": "estructura",
+      "parametrosJson": { "referencia_tabla": "dosificaciones" },
+      "partidasAfectadas": ["EST-CONC-210"],
+      "accionMotor": "concreto_dosificado",
+      "prioridad": 50
+    }
+  ]
+}

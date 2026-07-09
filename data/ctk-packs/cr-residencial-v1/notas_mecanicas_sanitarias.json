@@ -1,0 +1,39 @@
+{
+  "documento": {
+    "titulo": "Notas Mecanicas / Sanitarias CFIA (13 puntos)",
+    "disciplina": "sanitario_mecanico",
+    "fuente": "pack:cr-residencial-v1"
+  },
+  "reglas": [
+    {
+      "codigo": "NM-04",
+      "textoOriginal": "La pendiente minima de las tuberias de aguas negras sera de 1.5% a 2% segun diametro.",
+      "categoria": "sanitario",
+      "disciplina": "sanitario_mecanico",
+      "parametrosJson": { "pendiente_min_pct": 1.5, "pendiente_max_pct": 2.0 },
+      "partidasAfectadas": [],
+      "accionMotor": null,
+      "prioridad": 40
+    },
+    {
+      "codigo": "NM-07",
+      "textoOriginal": "El diametro de la tuberia sanitaria principal (colector) sera de Ø100 mm.",
+      "categoria": "sanitario",
+      "disciplina": "sanitario_mecanico",
+      "parametrosJson": { "diametro_principal_mm": 100 },
+      "partidasAfectadas": [],
+      "accionMotor": null,
+      "prioridad": 40
+    },
+    {
+      "codigo": "NM-12",
+      "textoOriginal": "La capacidad minima del tanque septico sera de 1100 litros para vivienda unifamiliar.",
+      "categoria": "sanitario",
+      "disciplina": "sanitario_mecanico",
+      "parametrosJson": { "capacidad_fosa_litros": 1100 },
+      "partidasAfectadas": [],
+      "accionMotor": null,
+      "prioridad": 40
+    }
+  ]
+}

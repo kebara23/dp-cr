@@ -1,0 +1,39 @@
+{
+  "documento": {
+    "titulo": "Notas Electricas ARESEP/NEC (26 puntos)",
+    "disciplina": "electrico",
+    "fuente": "pack:cr-residencial-v1"
+  },
+  "reglas": [
+    {
+      "codigo": "NE-13",
+      "textoOriginal": "Codigo de colores de conductores: fase negro/rojo/azul, neutro blanco, tierra verde o verde-amarillo.",
+      "categoria": "electrico",
+      "disciplina": "electrico",
+      "parametrosJson": { "fase": ["negro", "rojo", "azul"], "neutro": "blanco", "tierra": "verde" },
+      "partidasAfectadas": [],
+      "accionMotor": null,
+      "prioridad": 40
+    },
+    {
+      "codigo": "NE-19",
+      "textoOriginal": "La altura de los tomacorrientes sera de 1.10 m sobre el nivel de piso terminado, salvo indicacion contraria en planos.",
+      "categoria": "electrico",
+      "disciplina": "electrico",
+      "parametrosJson": { "altura_toma_m": 1.10 },
+      "partidasAfectadas": [],
+      "accionMotor": null,
+      "prioridad": 40
+    },
+    {
+      "codigo": "NE-25",
+      "textoOriginal": "La resistencia a tierra del sistema de puesta a tierra no debe exceder 5 ohms.",
+      "categoria": "electrico",
+      "disciplina": "electrico",
+      "parametrosJson": { "resistencia_tierra_max_ohm": 5 },
+      "partidasAfectadas": [],
+      "accionMotor": null,
+      "prioridad": 30
+    }
+  ]
+}

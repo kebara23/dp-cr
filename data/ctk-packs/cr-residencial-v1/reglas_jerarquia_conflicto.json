@@ -1,0 +1,26 @@
+{
+  "documento": {
+    "titulo": "Jerarquia normativa y resolucion de conflictos",
+    "disciplina": "general",
+    "fuente": "pack:cr-residencial-v1"
+  },
+  "jerarquia": {
+    "electrico": ["ARESEP", "ICE", "NEC", "notas_proyecto", "pack_global"],
+    "sanitario_mecanico": ["CFIA", "notas_proyecto", "pack_global"],
+    "estructura": ["notas_proyecto", "pack_global"],
+    "arquitectura": ["notas_proyecto", "pack_global"]
+  },
+  "reglas": [
+    {
+      "codigo": "CONF-01",
+      "textoOriginal": "Cuando dos fuentes difieren (ej. recubrimiento 25 vs 30 mm, curado 8 vs 28 dias), aplicar la de mayor jerarquia; si no se puede resolver, marcar requiere_validacion_humana y presentar ambas.",
+      "categoria": "proceso",
+      "disciplina": "general",
+      "parametrosJson": { "politica": "jerarquia_luego_validacion_humana" },
+      "partidasAfectadas": [],
+      "accionMotor": null,
+      "prioridad": 10,
+      "requiereValidacion": false
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "cr-residencial-v1",
+  "nombre": "CR Residencial V1",
+  "descripcion": "Conocimiento tecnico base para vivienda residencial en Costa Rica: notas generales, refuerzo, techo, electrico ARESEP, sanitario CFIA, dosificaciones y jerarquia de conflictos.",
+  "region": "Costa Rica",
+  "version": "1.0.0",
+  "archivos": [
+    "dosificaciones_concreto.json",
+    "notas_generales.json",
+    "notas_estructurales_refuerzo.json",
+    "notas_estructurales_techo.json",
+    "notas_electricas_aresep.json",
+    "notas_mecanicas_sanitarias.json",
+    "reglas_jerarquia_conflicto.json"
+  ]
+}

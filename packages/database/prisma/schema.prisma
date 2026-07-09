@@ -1,0 +1,484 @@
+// Plataforma Ingenieria Civil CTK — schema completo (se llena por fases).
+// Postgres 16 + pgvector para RAG sobre CTK.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Rol {
+  admin
+  cliente
+}
+
+enum Disciplina {
+  arquitectura
+  estructura
+  electrico
+  sanitario_mecanico
+  general
+}
+
+enum TipoLamina {
+  arquitectura
+  estructura
+  electrico
+  sanitario_mecanico
+  notas
+  tabla
+  simbologia
+  detalle
+}
+
+enum EstadoProcesamiento {
+  cargada
+  en_revision
+  validado
+  requiere_validacion_humana
+}
+
+enum CategoriaRegla {
+  mezcla
+  refuerzo
+  recubrimiento
+  traslape
+  mamposteria
+  electrico
+  sanitario
+  techo
+  proceso
+  otro
+}
+
+enum TipoElemento {
+  cota
+  simbolo
+  tabla_fila
+  nota
+  cuadro
+}
+
+enum EstadoLinea {
+  calculado
+  ajustado_manual
+  por_confirmar
+}
+
+enum CategoriaItem {
+  material
+  mano_obra
+  equipo
+}
+
+enum EstadoPresupuesto {
+  borrador
+  aprobado
+  publicado
+}
+
+enum TipoPresupuesto {
+  interno
+  cotizacion_cliente
+}
+
+enum NivelPublicacion {
+  resumen
+  capitulos
+  sin_detalle_mo
+}
+
+enum RolMensaje {
+  usuario
+  asistente
+  herramienta
+}
+
+// ============================================================
+// USUARIOS Y PROYECTOS
+// ============================================================
+
+model Usuario {
+  id            String    @id @default(cuid())
+  clerkId       String?   @unique
+  email         String    @unique
+  nombre        String?
+  rol           Rol       @default(admin)
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
+
+  proyectosAdmin   Proyecto[]          @relation("ProyectoAdmin")
+  accesosCliente   ProyectoCliente[]
+  conversaciones   ConversacionAgente[]
+
+  @@map("usuarios")
+}
+
+model Proyecto {
+  id        String   @id @default(cuid())
+  nombre    String
+  // Metadatos CR (registro publico)
+  propietario     String?
+  cedula          String?
+  planoCatastral  String?
+  numeroFolioReal String?
+  provincia       String?
+  canton          String?
+  distrito        String?
+  moneda          String   @default("CRC")
+  tipoObra        String?  @default("residencial")
+
+  adminId   String
+  admin     Usuario  @relation("ProyectoAdmin", fields: [adminId], references: [id])
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  clientes         ProyectoCliente[]
+  laminas          Lamina[]
+  documentos       DocumentoConocimiento[]
+  instrucciones    InstruccionCorpus[]
+  listasCantidades ListaCantidades[]
+  presupuestos     Presupuesto[]
+  publicaciones    PublicacionCliente[]
+  conversaciones   ConversacionAgente[]
+
+  @@map("proyectos")
+}
+
+model ProyectoCliente {
+  id         String   @id @default(cuid())
+  proyectoId String
+  usuarioId  String
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  creadoEn   DateTime @default(now())
+
+  @@unique([proyectoId, usuarioId])
+  @@map("proyecto_clientes")
+}
+
+// ============================================================
+// LAMINAS Y ELEMENTOS
+// ============================================================
+
+model Lamina {
+  id                  String              @id @default(cuid())
+  proyectoId          String
+  proyecto            Proyecto            @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  codigo              String // A-01, E-1, EST-01, A-09
+  nombre              String?
+  disciplina          Disciplina
+  tipo                TipoLamina
+  escala              String?
+  revision            String?             @default("A")
+  estadoProcesamiento EstadoProcesamiento @default(cargada)
+  archivoUrl          String?
+  archivoMime         String?
+  creadoEn            DateTime            @default(now())
+  actualizadoEn       DateTime            @updatedAt
+
+  elementos       ElementoPlano[]
+  reglasOrigen    ReglaTecnica[]  @relation("ReglaLaminaOrigen")
+  documentos      DocumentoConocimiento[]
+
+  @@unique([proyectoId, codigo, revision])
+  @@map("laminas")
+}
+
+model ElementoPlano {
+  id            String       @id @default(cuid())
+  laminaId      String
+  lamina        Lamina       @relation(fields: [laminaId], references: [id], onDelete: Cascade)
+  tipo          TipoElemento
+  codigo        String? // V-3, P-1, C2
+  descripcion   String?
+  valorNumerico Float?
+  unidad        String?
+  geometriaBbox Json? // {x,y,w,h} en coords de la lamina
+  metadata      Json?
+  creadoEn      DateTime     @default(now())
+
+  vinculaciones VinculacionConocimiento[]
+
+  @@map("elementos_plano")
+}
+
+// ============================================================
+// CTK: CONOCIMIENTO TECNICO
+// ============================================================
+
+model DocumentoConocimiento {
+  id         String     @id @default(cuid())
+  proyectoId String
+  proyecto   Proyecto   @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  laminaId   String?
+  lamina     Lamina?    @relation(fields: [laminaId], references: [id])
+  titulo     String
+  disciplina Disciplina
+  fuente     String? // "notas_generales", "pack:cr-residencial-v1", "manual"
+  creadoEn   DateTime   @default(now())
+
+  reglas   ReglaTecnica[]
+  tablas   FilaTablaReferencia[]
+  simbolos SimboloCatalogado[]
+
+  @@map("documentos_conocimiento")
+}
+
+model ReglaTecnica {
+  id                 String         @id @default(cuid())
+  documentoId        String
+  documento          DocumentoConocimiento @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  codigo             String // NG-05, NE-19, NM-12
+  textoOriginal      String
+  categoria          CategoriaRegla
+  disciplina         Disciplina
+  parametrosJson     Json? // ej {"altura_toma_m":1.10}
+  partidasAfectadas  String[]       @default([])
+  accionMotor        String? // hint para el motor: "dosificacion", "traslape", etc
+  prioridad          Int            @default(100) // menor = mayor prioridad
+  requiereValidacion Boolean        @default(false)
+  laminaOrigenId     String?
+  laminaOrigen       Lamina?        @relation("ReglaLaminaOrigen", fields: [laminaOrigenId], references: [id])
+  creadoEn           DateTime       @default(now())
+
+  vinculaciones VinculacionConocimiento[]
+  chunks        ChunkCtk[]
+
+  @@unique([documentoId, codigo])
+  @@map("reglas_tecnicas")
+}
+
+model FilaTablaReferencia {
+  id          String   @id @default(cuid())
+  documentoId String
+  documento   DocumentoConocimiento @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  tabla       String // "acero", "centro_carga_T-A", "dosificaciones", "mallas"
+  clave       String // "#4", "circuito_7", "210"
+  valoresJson Json // { longitud_traslape_mm: 480, ... }
+  creadoEn    DateTime @default(now())
+
+  chunks ChunkCtk[]
+
+  @@index([documentoId, tabla])
+  @@map("filas_tabla_referencia")
+}
+
+model SimboloCatalogado {
+  id          String     @id @default(cuid())
+  documentoId String
+  documento   DocumentoConocimiento @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  codigo      String // simbolo/abreviatura
+  descripcion String
+  disciplina  Disciplina
+  metadata    Json?
+  creadoEn    DateTime   @default(now())
+
+  @@map("simbolos_catalogados")
+}
+
+model VinculacionConocimiento {
+  id              String        @id @default(cuid())
+  reglaId         String?
+  regla           ReglaTecnica? @relation(fields: [reglaId], references: [id], onDelete: Cascade)
+  elementoPlanoId String?
+  elementoPlano   ElementoPlano? @relation(fields: [elementoPlanoId], references: [id], onDelete: Cascade)
+  nota            String?
+  creadoEn        DateTime      @default(now())
+
+  @@map("vinculaciones_conocimiento")
+}
+
+// Chunks vectoriales para RAG. Embedding via pgvector.
+model ChunkCtk {
+  id          String   @id @default(cuid())
+  reglaId     String?
+  regla       ReglaTecnica? @relation(fields: [reglaId], references: [id], onDelete: Cascade)
+  filaTablaId String?
+  filaTabla   FilaTablaReferencia? @relation(fields: [filaTablaId], references: [id], onDelete: Cascade)
+  contenido   String
+  disciplina  Disciplina
+  embedding   Unsupported("vector(1536)")?
+  creadoEn    DateTime @default(now())
+
+  @@map("chunks_ctk")
+}
+
+// ============================================================
+// MANAGEMENT: INSTRUCCIONES
+// ============================================================
+
+model InstruccionCorpus {
+  id           String     @id @default(cuid())
+  proyectoId   String
+  proyecto     Proyecto   @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  disciplina   Disciplina?
+  contenido    String
+  parametros   Json?
+  creadoEn     DateTime   @default(now())
+
+  @@map("instrucciones_corpus")
+}
+
+// ============================================================
+// METRADO / CANTIDADES
+// ============================================================
+
+model ListaCantidades {
+  id         String   @id @default(cuid())
+  proyectoId String
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  version    Int      @default(1)
+  nombre     String?
+  creadoEn   DateTime @default(now())
+
+  lineas LineaCantidad[]
+
+  @@unique([proyectoId, version])
+  @@map("listas_cantidades")
+}
+
+model LineaCantidad {
+  id              String          @id @default(cuid())
+  listaId         String
+  lista           ListaCantidades @relation(fields: [listaId], references: [id], onDelete: Cascade)
+  partida         String // codigo de partida (catalogo)
+  descripcion     String
+  unidad          String
+  cantidad        Float
+  formulaAplicada String?
+  reglasCtkIds    String[]        @default([])
+  origenLamina    String?
+  disciplina      Disciplina
+  estado          EstadoLinea     @default(calculado)
+  creadoEn        DateTime        @default(now())
+
+  @@map("lineas_cantidad")
+}
+
+// ============================================================
+// PRECIOS Y PRESUPUESTO
+// ============================================================
+
+model FuentePrecio {
+  id            String   @id @default(cuid())
+  nombre        String
+  moneda        String   @default("CRC")
+  version       String?
+  vigenciaDesde DateTime?
+  vigenciaHasta DateTime?
+  activa        Boolean  @default(true)
+  creadoEn      DateTime @default(now())
+
+  items ItemPrecio[]
+
+  @@map("fuentes_precio")
+}
+
+model ItemPrecio {
+  id         String        @id @default(cuid())
+  fuenteId   String
+  fuente     FuentePrecio  @relation(fields: [fuenteId], references: [id], onDelete: Cascade)
+  codigo     String
+  descripcion String
+  unidad     String
+  precio     Float
+  categoria  CategoriaItem
+  creadoEn   DateTime      @default(now())
+
+  @@unique([fuenteId, codigo])
+  @@map("items_precio")
+}
+
+model Presupuesto {
+  id            String            @id @default(cuid())
+  proyectoId    String
+  proyecto      Proyecto          @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  tipo          TipoPresupuesto   @default(interno)
+  estado        EstadoPresupuesto @default(borrador)
+  fuentePrecioId String?
+  moneda        String            @default("CRC")
+  impuestoPct   Float             @default(13)
+  margenPct     Float             @default(0)
+  validezDias   Int               @default(30)
+  notasComerciales String?
+  creadoEn      DateTime          @default(now())
+  actualizadoEn DateTime          @updatedAt
+
+  lineas LineaPresupuesto[]
+
+  @@map("presupuestos")
+}
+
+model LineaPresupuesto {
+  id            String      @id @default(cuid())
+  presupuestoId String
+  presupuesto   Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
+  capitulo      String // "01 Mov. tierras" ... "09 Inst. electrica"
+  partida       String
+  descripcion   String
+  unidad        String
+  cantidad      Float
+  precioUnitario Float
+  subtotal      Float
+  itemPrecioId  String?
+  creadoEn      DateTime    @default(now())
+
+  @@map("lineas_presupuesto")
+}
+
+// ============================================================
+// PUBLICACION Y AGENTE
+// ============================================================
+
+model PublicacionCliente {
+  id         String           @id @default(cuid())
+  proyectoId String
+  proyecto   Proyecto         @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  nivel      NivelPublicacion @default(resumen)
+  incluyePlanos Boolean       @default(false)
+  incluyeCotizacion Boolean   @default(false)
+  snapshotJson Json? // snapshot versionado de lo publicado
+  creadoEn   DateTime         @default(now())
+
+  @@map("publicaciones_cliente")
+}
+
+model ConversacionAgente {
+  id         String   @id @default(cuid())
+  proyectoId String
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  usuarioId  String
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  titulo     String?
+  creadoEn   DateTime @default(now())
+
+  mensajes MensajeAgente[]
+
+  @@map("conversaciones_agente")
+}
+
+model MensajeAgente {
+  id              String             @id @default(cuid())
+  conversacionId  String
+  conversacion    ConversacionAgente @relation(fields: [conversacionId], references: [id], onDelete: Cascade)
+  rol             RolMensaje
+  contenido       String
+  herramientasInvocadas Json? // [{tool, args, result}]
+  fuentesCitadas  Json? // [{tipo, codigo, laminaId}]
+  confianza       Float?
+  requiereValidacion Boolean         @default(false)
+  creadoEn        DateTime           @default(now())
+
+  @@map("mensajes_agente")
+}

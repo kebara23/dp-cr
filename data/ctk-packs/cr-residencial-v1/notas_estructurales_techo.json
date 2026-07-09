@@ -1,0 +1,29 @@
+{
+  "documento": {
+    "titulo": "Notas estructurales - Techo",
+    "disciplina": "arquitectura",
+    "fuente": "pack:cr-residencial-v1"
+  },
+  "reglas": [
+    {
+      "codigo": "NT-01",
+      "textoOriginal": "Cubierta de lamina de zinc rectangular #26. El traslape entre laminas de zinc sera de 15 cm minimo. Considerar 10% de desperdicio sobre el area de techo.",
+      "categoria": "techo",
+      "disciplina": "arquitectura",
+      "parametrosJson": { "traslape_cm": 15, "desperdicio_pct": 10, "calibre": "#26" },
+      "partidasAfectadas": ["ARQ-TECHO-ZINC"],
+      "accionMotor": "techo_zinc",
+      "prioridad": 50
+    },
+    {
+      "codigo": "NT-02",
+      "textoOriginal": "Perfiles metalicos de techo (cerchas HG) fabricados en acero ASTM A570-33. Soldadura con electrodo E6011. Aplicar pintura anticorrosiva en 4 manos sobre los perfiles.",
+      "categoria": "techo",
+      "disciplina": "estructura",
+      "parametrosJson": { "acero": "ASTM A570-33", "electrodo": "E6011", "manos_pintura": 4 },
+      "partidasAfectadas": ["EST-PINT-PERF"],
+      "accionMotor": "pintura_perfiles",
+      "prioridad": 50
+    }
+  ]
+}

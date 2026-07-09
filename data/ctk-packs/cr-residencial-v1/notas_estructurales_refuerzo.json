@@ -1,0 +1,46 @@
+{
+  "documento": {
+    "titulo": "Notas estructurales - Acero de refuerzo",
+    "disciplina": "estructura",
+    "fuente": "pack:cr-residencial-v1"
+  },
+  "tablas": [
+    {
+      "tabla": "acero",
+      "clave": "#3",
+      "valores": { "designacion": "#3", "diametro_mm": 9.5, "peso_kg_m": 0.56, "traslape_fc210_mm": 400, "grado": 40 }
+    },
+    {
+      "tabla": "acero",
+      "clave": "#4",
+      "valores": { "designacion": "#4", "diametro_mm": 12.7, "peso_kg_m": 0.99, "traslape_fc210_mm": 480, "grado": 60 }
+    },
+    {
+      "tabla": "acero",
+      "clave": "#5",
+      "valores": { "designacion": "#5", "diametro_mm": 15.9, "peso_kg_m": 1.55, "traslape_fc210_mm": 600, "grado": 60 }
+    },
+    {
+      "tabla": "acero",
+      "clave": "#6",
+      "valores": { "designacion": "#6", "diametro_mm": 19.1, "peso_kg_m": 2.24, "traslape_fc210_mm": 750, "grado": 60 }
+    },
+    {
+      "tabla": "acero",
+      "clave": "#7",
+      "valores": { "designacion": "#7", "diametro_mm": 22.2, "peso_kg_m": 3.04, "traslape_fc210_mm": 1050, "grado": 60 }
+    }
+  ],
+  "reglas": [
+    {
+      "codigo": "NE-ACERO-01",
+      "textoOriginal": "Toda varilla de refuerzo sera grado 40 (#3) o grado 60 (#4 y mayores), corrugada, ASTM A615. Las longitudes de traslape se toman de la tabla de acero segun f'c.",
+      "categoria": "refuerzo",
+      "disciplina": "estructura",
+      "parametrosJson": { "norma": "ASTM A615" },
+      "partidasAfectadas": ["EST-ACERO"],
+      "accionMotor": "acero_refuerzo",
+      "prioridad": 50
+    }
+  ]
+}
