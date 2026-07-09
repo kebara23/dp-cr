@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
+const path = require("path");
+
 const nextConfig = {
+  outputFileTracingRoot: path.join(__dirname, "../../"),
+  outputFileTracingIncludes: {
+    "/*": ["../../node_modules/.pnpm/@prisma+client*/**/*"],
+    "/api/**/*": ["../../node_modules/.pnpm/@prisma+client*/**/*"],
+  },
   transpilePackages: [
     "@diego-porras/database",
     "@diego-porras/shared",

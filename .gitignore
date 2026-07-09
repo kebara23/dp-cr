@@ -12,3 +12,4 @@ uploads
 *.db
 *.db-journal
 tsconfig.tsbuildinfo
+.vercel

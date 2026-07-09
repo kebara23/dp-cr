@@ -10,7 +10,8 @@
     "db:generate": "pnpm --filter @diego-porras/database generate",
     "db:push": "pnpm --filter @diego-porras/database push",
     "db:seed": "pnpm --filter @diego-porras/database seed",
-    "db:studio": "pnpm --filter @diego-porras/database studio"
+    "db:studio": "pnpm --filter @diego-porras/database studio",
+    "vercel-build": "bash scripts/vercel-build.sh"
   },
   "devDependencies": {
     "turbo": "^2.3.3",
@@ -19,5 +20,8 @@
   "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "next": "^15.1.0"
   }
 }
