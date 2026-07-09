@@ -1,0 +1,21 @@
+[
+  {
+    "codigo": "NM-01",
+    "numero": 1,
+    "categoria": "NORMATIVA",
+    "disciplina": "SANITARIO_MECANICO",
+    "textoOriginal": "Cumplir reglamento CFIA.",
+    "parametrosJson": { "normas": ["CFIA"] },
+    "partidasAfectadas": ["07.01", "07.02", "08.01"]
+  },
+  {
+    "codigo": "NM-12",
+    "numero": 12,
+    "categoria": "DIMENSION",
+    "disciplina": "SANITARIO_MECANICO",
+    "textoOriginal": "Aguas negras mínimo Ø100mm con pendiente mínima 1.5%.",
+    "parametrosJson": { "diametro_mm": 100, "pendiente_min_pct": 1.5 },
+    "partidasAfectadas": ["07.01"],
+    "accionMotor": "validar_cumplimiento"
+  }
+]

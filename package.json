@@ -1,0 +1,23 @@
+{
+  "name": "diego-porras",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix apps/web",
+    "dev:3001": "npm run dev --prefix apps/web -- -p 3001",
+    "dev:turbo": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "db:generate": "pnpm --filter @diego-porras/database generate",
+    "db:push": "pnpm --filter @diego-porras/database push",
+    "db:seed": "pnpm --filter @diego-porras/database seed",
+    "db:studio": "pnpm --filter @diego-porras/database studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

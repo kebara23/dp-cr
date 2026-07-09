@@ -1,0 +1,21 @@
+[
+  {
+    "codigo": "NET-01",
+    "numero": 1,
+    "categoria": "MATERIAL",
+    "disciplina": "ESTRUCTURA",
+    "textoOriginal": "Perfiles A-570-33, fy=2310 kg/cm². Soldadura E6011 AWS.",
+    "parametrosJson": { "perfil": "A-570-33", "fy_kg_cm2": 2310, "soldadura": "E6011" },
+    "partidasAfectadas": ["05.04"]
+  },
+  {
+    "codigo": "NET-02",
+    "numero": 2,
+    "categoria": "PROCESO",
+    "disciplina": "ESTRUCTURA",
+    "textoOriginal": "Perfiles rt: 2 manos anticorrosiva + 2 manos acabado.",
+    "parametrosJson": { "manos_anticorrosiva": 2, "manos_acabado": 2 },
+    "partidasAfectadas": ["05.05"],
+    "accionMotor": "calcular_pintura"
+  }
+]

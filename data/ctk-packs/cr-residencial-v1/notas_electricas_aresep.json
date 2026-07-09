@@ -1,0 +1,42 @@
+[
+  {
+    "codigo": "NE-01",
+    "numero": 1,
+    "categoria": "NORMATIVA",
+    "disciplina": "ELECTRICO",
+    "textoOriginal": "Cumplir ARESEP, ICE, Código Eléctrico Nacional y RITE.",
+    "parametrosJson": { "normas": ["ARESEP", "ICE", "NEC", "RITE"] },
+    "partidasAfectadas": ["09.01", "09.02", "09.03"]
+  },
+  {
+    "codigo": "NE-13",
+    "numero": 13,
+    "categoria": "MATERIAL",
+    "disciplina": "ELECTRICO",
+    "textoOriginal": "Colores: Rojo=fase tomas, Azul=fase retornos, Negro=fase iluminación, Blanco=neutro, Verde=tierra.",
+    "parametrosJson": {
+      "colores": { "tomas": "rojo", "retornos": "azul", "iluminacion": "negro", "neutro": "blanco", "tierra": "verde" }
+    },
+    "partidasAfectadas": ["09.02"]
+  },
+  {
+    "codigo": "NE-19",
+    "numero": 19,
+    "categoria": "DIMENSION",
+    "disciplina": "ELECTRICO",
+    "textoOriginal": "Tomas en cocina y baño a 1.10m sobre piso terminado.",
+    "parametrosJson": { "altura_m": 1.10, "ambientes": ["cocina", "baño"] },
+    "partidasAfectadas": ["09.04"],
+    "accionMotor": "validar_cumplimiento"
+  },
+  {
+    "codigo": "NE-25",
+    "numero": 25,
+    "categoria": "VALIDACION",
+    "disciplina": "ELECTRICO",
+    "textoOriginal": "Resistencia de tierra no mayor a 5 ohmios.",
+    "parametrosJson": { "resistencia_max_ohm": 5 },
+    "partidasAfectadas": ["09.07"],
+    "accionMotor": "validar_cumplimiento"
+  }
+]

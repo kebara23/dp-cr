@@ -1,0 +1,14 @@
+[
+  {
+    "reglaA": "NG-02",
+    "reglaB": "EST-REC-01",
+    "descripcion": "Recubrimiento 25mm (notas generales) vs 30mm (estructural general) vs 50mm (zapatas)",
+    "resolucion": "Aplicar 50mm zapatas, 30mm elementos estructurales según lámina estructural; marcar conflicto si solo hay NG-02"
+  },
+  {
+    "reglaA": "NG-08",
+    "reglaB": "EST-CUR-01",
+    "descripcion": "Curado 28 días x3/día (NG) vs 8 días mínimo (estructural)",
+    "resolucion": "Aplicar el más restrictivo (28 días) para presupuesto de mano de obra; citar ambas fuentes"
+  }
+]

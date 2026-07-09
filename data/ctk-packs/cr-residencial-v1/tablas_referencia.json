@@ -1,0 +1,78 @@
+[
+  {
+    "tablaId": "DOSIFICACION_CONCRETO",
+    "clave": "210",
+    "columnasJson": {
+      "fc_kg_cm2": 210,
+      "cemento": 1,
+      "arena": 2,
+      "piedra": 3,
+      "usos": "columnas, vigas, zapatas, mochetas, contrapiso"
+    },
+    "unidadPrecio": "m³",
+    "partidaCodigo": "02.01"
+  },
+  {
+    "tablaId": "DOSIFICACION_CONCRETO",
+    "clave": "175",
+    "columnasJson": { "fc_kg_cm2": 175, "cemento": 1, "arena": 2, "piedra": 4, "usos": "repello, cajas" },
+    "partidaCodigo": "03.02"
+  },
+  {
+    "tablaId": "ACERO_REFUERZO",
+    "clave": "#3",
+    "columnasJson": { "diametro_mm": 9.5, "area_cm2": 0.71, "grado": 40, "traslape_mm_fc210": 600 },
+    "unidadPrecio": "kg",
+    "partidaCodigo": "02.02"
+  },
+  {
+    "tablaId": "ACERO_REFUERZO",
+    "clave": "#4",
+    "columnasJson": { "diametro_mm": 12.7, "area_cm2": 1.27, "grado": 40, "traslape_mm_fc210": 700 },
+    "unidadPrecio": "kg",
+    "partidaCodigo": "02.02"
+  },
+  {
+    "tablaId": "CENTRO_CARGA_TA",
+    "clave": "circuito_total",
+    "columnasJson": { "carga_total_w": 23050, "kva": 23.05, "factor_demanda": 0.65, "kva_demandados": 13.875 },
+    "partidaCodigo": "09.01"
+  },
+  {
+    "tablaId": "CENTRO_CARGA_TA",
+    "clave": "circuito_7",
+    "columnasJson": {
+      "descripcion": "Cocina Eléctrica",
+      "carga_w": 4000,
+      "breaker": "2x40A",
+      "conductores": "2#8+1#8(T) THHN",
+      "conduit": "3/4\" PVC"
+    },
+    "partidaCodigo": "09.01"
+  },
+  {
+    "tablaId": "VENTANAS",
+    "clave": "V-1",
+    "columnasJson": { "ancho_m": 1.50, "alto_m": 1.40, "tipo": "corredera", "area_m2": 2.10 },
+    "unidadPrecio": "m²",
+    "partidaCodigo": "06.02"
+  },
+  {
+    "tablaId": "VENTANAS",
+    "clave": "V-3",
+    "columnasJson": { "ancho_m": 1.00, "alto_m": 0.40, "npt_m": 2.10, "area_m2": 0.40 },
+    "partidaCodigo": "06.02"
+  },
+  {
+    "tablaId": "TECHO_ZINC",
+    "clave": "area_planta",
+    "columnasJson": { "largo_m": 13.40, "ancho_m": 10.10, "area_m2": 135.34, "desperdicio_pct": 10, "traslape_cm": 15 },
+    "partidaCodigo": "05.01"
+  },
+  {
+    "tablaId": "SANITARIO",
+    "clave": "fosa_septica",
+    "columnasJson": { "capacidad_l": 1100, "diametro_principal_mm": 100 },
+    "partidaCodigo": "07.03"
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "codigo": "NG-01",
+    "numero": 1,
+    "categoria": "DOSIFICACION",
+    "disciplina": "GENERAL",
+    "textoOriginal": "Dosificación concreto 210 kg/cm²: 1 cemento, 2 arena, 3 piedra. Usos: columnas, vigas, zapatas, mochetas, contrapiso.",
+    "parametrosJson": {
+      "fc": 210,
+      "proporcion": { "cemento": 1, "arena": 2, "piedra": 3 },
+      "usos": ["columnas", "vigas", "zapatas", "mochetas", "contrapiso"]
+    },
+    "partidasAfectadas": ["02.01"],
+    "accionMotor": "calcular_dosificacion"
+  },
+  {
+    "codigo": "NG-01b",
+    "numero": 1,
+    "categoria": "DOSIFICACION",
+    "disciplina": "GENERAL",
+    "textoOriginal": "Dosificación 175 kg/cm²: 1:2:4 para repello ASTM C270 y cajas.",
+    "parametrosJson": { "fc": 175, "proporcion": { "cemento": 1, "arena": 2, "piedra": 4 } },
+    "partidasAfectadas": ["03.02"],
+    "accionMotor": "calcular_dosificacion"
+  },
+  {
+    "codigo": "NG-02",
+    "numero": 2,
+    "categoria": "DIMENSION",
+    "disciplina": "ESTRUCTURA",
+    "textoOriginal": "Recubrimiento mínimo 25mm en caras y fondos de vigas, losas y columnas.",
+    "parametrosJson": { "recubrimiento_mm": 25 },
+    "partidasAfectadas": ["02.01", "02.02"],
+    "accionMotor": "validar_recubrimiento"
+  },
+  {
+    "codigo": "NG-05",
+    "numero": 5,
+    "categoria": "DIMENSION",
+    "disciplina": "ESTRUCTURA",
+    "textoOriginal": "Traslape mínimo varilla #3: 60cm; #4: 70cm.",
+    "parametrosJson": { "traslape_cm": { "#3": 60, "#4": 70, "#5": 85, "#6": 100 } },
+    "partidasAfectadas": ["02.02"],
+    "accionMotor": "calcular_traslape"
+  },
+  {
+    "codigo": "NG-08",
+    "numero": 8,
+    "categoria": "PROCESO",
+    "disciplina": "ESTRUCTURA",
+    "textoOriginal": "Curado: regar 3 veces al día durante 28 días.",
+    "parametrosJson": { "dias": 28, "frecuencia_dia": 3 },
+    "partidasAfectadas": ["02.01"],
+    "requiereValidacion": true
+  },
+  {
+    "codigo": "NG-11",
+    "numero": 11,
+    "categoria": "MATERIAL",
+    "disciplina": "GENERAL",
+    "textoOriginal": "Bloques primera calidad Clase A: 12x20x40, 15x20x40, 20x20x40 cm.",
+    "parametrosJson": { "tamanos_cm": ["12x20x40", "15x20x40", "20x20x40"] },
+    "partidasAfectadas": ["03.01"]
+  },
+  {
+    "codigo": "NG-12",
+    "numero": 12,
+    "categoria": "DOSIFICACION",
+    "disciplina": "GENERAL",
+    "textoOriginal": "Mortero bloques dosificación 1:5 en volumen.",
+    "parametrosJson": { "proporcion": { "cemento": 1, "arena": 5 } },
+    "partidasAfectadas": ["03.01"]
+  },
+  {
+    "codigo": "NG-14",
+    "numero": 14,
+    "categoria": "MATERIAL",
+    "disciplina": "ESTRUCTURA",
+    "textoOriginal": "Acero deformado Grado 40, fy mínimo 2855 kg/cm², ASTM A-615 y A-706.",
+    "parametrosJson": { "grado": 40, "fy_kg_cm2": 2855, "normas": ["ASTM A-615", "ASTM A-706"] },
+    "partidasAfectadas": ["02.02"]
+  },
+  {
+    "codigo": "NG-17",
+    "numero": 17,
+    "categoria": "DIMENSION",
+    "disciplina": "GENERAL",
+    "textoOriginal": "Mampostería: refuerzo horizontal 1#3@40cm, vertical 1#3@60cm en celdas rellenas.",
+    "parametrosJson": { "horizontal": "1#3@40cm", "vertical": "1#3@60cm" },
+    "partidasAfectadas": ["03.01", "02.02"]
+  }
+]

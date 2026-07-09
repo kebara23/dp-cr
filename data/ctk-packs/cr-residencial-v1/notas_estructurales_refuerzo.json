@@ -1,0 +1,22 @@
+[
+  {
+    "codigo": "EST-REC-01",
+    "numero": 1,
+    "categoria": "DIMENSION",
+    "disciplina": "ESTRUCTURA",
+    "textoOriginal": "Recubrimiento 50mm zapatas y vigas amarre; 30mm resto de elementos estructurales.",
+    "parametrosJson": { "zapatas_mm": 50, "otros_mm": 30 },
+    "partidasAfectadas": ["02.01", "02.02"],
+    "prioridad": 10
+  },
+  {
+    "codigo": "EST-CUR-01",
+    "numero": 2,
+    "categoria": "PROCESO",
+    "disciplina": "ESTRUCTURA",
+    "textoOriginal": "Curado: mantener superficies húmedas mínimo 8 días.",
+    "parametrosJson": { "dias": 8 },
+    "partidasAfectadas": ["02.01"],
+    "prioridad": 10
+  }
+]

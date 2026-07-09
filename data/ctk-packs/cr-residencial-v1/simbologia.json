@@ -1,0 +1,39 @@
+[
+  {
+    "codigo": "SYM-E-MEDIDOR",
+    "nombre": "Medidor",
+    "descripcion": "Medidor eléctrico (M)",
+    "equivalenteMaterial": "Medidor bifásico",
+    "reglasAsociadas": ["NE-01"]
+  },
+  {
+    "codigo": "SYM-E-TOMA",
+    "nombre": "Tomacorriente duplex",
+    "descripcion": "Toma corriente estándar",
+    "equivalenteMaterial": "Tomacorriente duplex 20A",
+    "reglasAsociadas": ["NE-14", "NE-19"],
+    "alturaInstalacionM": 0.40
+  },
+  {
+    "codigo": "SYM-E-GFCI",
+    "nombre": "Toma GFCI",
+    "descripcion": "Toma con protección GFCI",
+    "equivalenteMaterial": "Toma GFCI 20A",
+    "reglasAsociadas": ["NE-19"],
+    "alturaInstalacionM": 1.10
+  },
+  {
+    "codigo": "SYM-M-AGUA-NEGRA",
+    "nombre": "Tubería aguas negras",
+    "descripcion": "PVC Ø100mm pendiente 2%",
+    "equivalenteMaterial": "PVC SCH-40 Ø100mm",
+    "reglasAsociadas": ["NM-12"]
+  },
+  {
+    "codigo": "SYM-M-RS",
+    "nombre": "Caja registro sanitaria",
+    "descripcion": "Caja RS",
+    "equivalenteMaterial": "Caja registro sanitaria",
+    "reglasAsociadas": ["NM-01"]
+  }
+]
