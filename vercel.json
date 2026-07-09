@@ -3,16 +3,5 @@
   "installCommand": "pnpm install",
   "buildCommand": "pnpm vercel-build",
   "outputDirectory": "apps/web/.next",
-  "framework": "nextjs",
-  "functions": {
-    "apps/web/src/app/api/jobs/procesar-lamina/route.ts": {
-      "maxDuration": 60
-    },
-    "apps/web/src/app/api/proyectos/[id]/laminas/route.ts": {
-      "maxDuration": 30
-    },
-    "apps/web/src/app/api/blob/upload/route.ts": {
-      "maxDuration": 30
-    }
-  }
+  "framework": "nextjs"
 }
