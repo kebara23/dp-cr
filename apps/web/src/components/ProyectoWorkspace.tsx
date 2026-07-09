@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AgentChat } from "@/components/AgentChat";
+import { LaminasUpload } from "@/components/LaminasUpload";
 
 type Tab = "planos" | "ctk" | "metrado" | "presupuesto" | "publicar" | "agente";
 
@@ -28,28 +29,6 @@ export function ProyectoWorkspace({ proyecto, reglas, fuentes }: Props) {
   const [tab, setTab] = useState<Tab>("agente");
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState("");
-
-  async function subirLamina(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setLoading(true);
-    const form = new FormData();
-    form.append("file", file);
-    form.append(
-      "metadata",
-      JSON.stringify({
-        codigo: `A-${String(proyecto.laminas.length + 1).padStart(2, "0")}`,
-        nombre: file.name,
-        disciplina: "ARQUITECTURA",
-        tipo: "ARQUITECTURA",
-        escala: "1:50",
-        revision: "A",
-      })
-    );
-    await fetch(`/api/proyectos/${proyecto.id}/laminas`, { method: "POST", body: form });
-    setLoading(false);
-    router.refresh();
-  }
 
   async function generarMetrado() {
     setLoading(true);
@@ -137,10 +116,10 @@ export function ProyectoWorkspace({ proyecto, reglas, fuentes }: Props) {
       {tab === "planos" && (
         <div className="space-y-4">
           <div className="flex gap-3 items-center">
-            <label className="bg-primary text-white px-4 py-2 rounded-lg text-sm cursor-pointer">
-              Subir lámina PDF
-              <input type="file" accept=".pdf,.png,.jpg" className="hidden" onChange={subirLamina} />
-            </label>
+            <LaminasUpload
+              proyectoId={proyecto.id}
+              nextCodigo={`A-${String(proyecto.laminas.length + 1).padStart(2, "0")}`}
+            />
             {loading && <span className="text-sm text-slate-400">Procesando...</span>}
           </div>
           <div className="grid gap-3">

@@ -39,7 +39,10 @@ export default async function LaminasPage() {
             {proyecto.nombre} — {laminas.length} láminas, {disciplinas.length} disciplinas
           </p>
         </div>
-        <LaminasUpload proyectoId={proyecto.id} />
+        <LaminasUpload
+          proyectoId={proyecto.id}
+          nextCodigo={`A-${String(laminas.length + 1).padStart(2, "0")}`}
+        />
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">

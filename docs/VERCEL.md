@@ -16,13 +16,13 @@
 
 | Ajuste | Valor |
 |--------|--------|
-| **Root Directory** | `apps/web` |
+| **Root Directory** | `.` (raíz del monorepo) |
 | **Framework** | Next.js |
 | **Production Branch** | `fusion/mega-dp-cr` (o dejar preview por PR) |
-| **Install Command** | `cd ../.. && pnpm install` |
-| **Build Command** | `cd ../.. && pnpm vercel-build` |
+| **Install Command** | `pnpm install` |
+| **Build Command** | `pnpm vercel-build` |
 
-El archivo `apps/web/vercel.json` ya define install/build.
+El archivo [`vercel.json`](../vercel.json) en la raíz define install/build/output.
 
 ## 3. Variables de entorno
 
@@ -33,6 +33,7 @@ En Vercel → Project → Settings → Environment Variables:
 | `DATABASE_URL` | Production, Preview, Development |
 | `JWT_SECRET` | Production, Preview (string largo aleatorio) |
 | `NEXT_PUBLIC_APP_URL` | Production = URL de Vercel; Preview = URL preview |
+| `BLOB_READ_WRITE_TOKEN` | Production, Preview, Development (Vercel Blob store) |
 
 Ejemplo producción:
 
@@ -40,6 +41,13 @@ Ejemplo producción:
 NEXT_PUBLIC_APP_URL=https://dp-cr-fusion.vercel.app
 ```
 
+### Blob (láminas)
+
+```bash
+vercel blob create-store dp-cr-laminas --access public --yes
+```
+
+Esto crea el store y enlaza `BLOB_READ_WRITE_TOKEN` al proyecto. Sin este token, en Vercel la subida de láminas falla.
 ## 4. Deploy
 
 **Opción A — Git (recomendado):** push a `fusion/mega-dp-cr` → Vercel despliega preview automático.

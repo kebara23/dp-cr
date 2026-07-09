@@ -13,3 +13,4 @@ uploads
 *.db-journal
 tsconfig.tsbuildinfo
 .vercel
+.env*.local
