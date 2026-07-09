@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AgentChat } from "@/components/AgentChat";
 import { LaminasUpload } from "@/components/LaminasUpload";
+import { estadoBadgeClass } from "@/lib/lamina-status";
 
 type Tab = "planos" | "ctk" | "metrado" | "presupuesto" | "publicar" | "agente";
 
@@ -128,7 +129,14 @@ export function ProyectoWorkspace({ proyecto, reglas, fuentes }: Props) {
                 <div>
                   <span className="font-mono text-sm font-medium">{l.codigo}</span>
                   <p className="text-sm">{l.nombre}</p>
-                  <p className="text-xs text-slate-400">{l.disciplina} — {l.estadoProcesamiento}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-slate-400">{l.disciplina}</span>
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${estadoBadgeClass(l.estadoProcesamiento)}`}
+                    >
+                      {l.estadoProcesamiento}
+                    </span>
+                  </div>
                 </div>
                 <a href={l.archivoUrl} target="_blank" className="text-sm text-primary hover:underline">
                   Ver

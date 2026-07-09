@@ -34,6 +34,11 @@ En Vercel → Project → Settings → Environment Variables:
 | `JWT_SECRET` | Production, Preview (string largo aleatorio) |
 | `NEXT_PUBLIC_APP_URL` | Production = URL de Vercel; Preview = URL preview |
 | `BLOB_READ_WRITE_TOKEN` | Production, Preview, Development (Vercel Blob store) |
+| `CRON_SECRET` | Opcional — protege `/api/jobs/procesar-lamina` |
+
+### Subida de láminas (Fase A)
+
+Los PDFs se suben **directo del navegador a Blob** (`@vercel/blob/client`), no pasan por el body de la Serverless Function (evita el límite 4.5 MB / error 413). Luego un job asíncrono descarga el archivo y extrae texto. OCR externo queda para Fase B.
 
 Ejemplo producción:
 

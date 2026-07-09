@@ -1,5 +1,6 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -30,6 +31,49 @@ const TIPOS = [
 type Disciplina = (typeof DISCIPLINAS)[number];
 type Tipo = (typeof TIPOS)[number];
 
+function safeFilename(filename: string): string {
+  return filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+async function pollLaminaEstado(
+  proyectoId: string,
+  laminaId: string,
+  onUpdate: (estado: string, motivo?: string) => void
+): Promise<{ estado: string; disciplina?: string; codigo?: string; motivo?: string }> {
+  const maxAttempts = 40;
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const res = await fetch(`/api/proyectos/${proyectoId}/laminas`);
+    if (!res.ok) continue;
+    const list = (await res.json()) as Array<{
+      id: string;
+      codigo: string;
+      disciplina: string;
+      estadoProcesamiento: string;
+      metadataJson?: { motivo?: string } | null;
+    }>;
+    const found = list.find((l) => l.id === laminaId);
+    if (!found) continue;
+    const motivo =
+      found.metadataJson && typeof found.metadataJson === "object"
+        ? found.metadataJson.motivo
+        : undefined;
+    onUpdate(found.estadoProcesamiento, motivo);
+    if (
+      found.estadoProcesamiento !== "PENDIENTE" &&
+      found.estadoProcesamiento !== "PROCESANDO"
+    ) {
+      return {
+        estado: found.estadoProcesamiento,
+        disciplina: found.disciplina,
+        codigo: found.codigo,
+        motivo,
+      };
+    }
+  }
+  return { estado: "PROCESANDO" };
+}
+
 export function LaminasUpload({
   proyectoId,
   nextCodigo,
@@ -41,6 +85,10 @@ export function LaminasUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "uploading" | "registering" | "processing">(
+    "idle"
+  );
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -58,6 +106,8 @@ export function LaminasUpload({
     setNombre((prev) => prev || picked.name.replace(/\.[^.]+$/, ""));
     setError(null);
     setSuccess(null);
+    setProgress(0);
+    setPhase("idle");
     setOpen(true);
   }
 
@@ -70,25 +120,41 @@ export function LaminasUpload({
     setLoading(true);
     setError(null);
     setSuccess(null);
+    setProgress(0);
 
     try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append(
-        "metadata",
-        JSON.stringify({
-          codigo: codigo.trim() || `A-${String(Date.now()).slice(-2)}`,
-          nombre: nombre.trim() || file.name,
-          disciplina,
-          tipo,
-          escala: escala.trim() || undefined,
-          revision: revision.trim() || "A",
-        })
-      );
+      // 1) Direct client upload to Vercel Blob (bypasses 4.5MB serverless limit)
+      setPhase("uploading");
+      const pathname = `laminas/${proyectoId}/${Date.now()}-${safeFilename(file.name)}`;
+      const blob = await upload(pathname, file, {
+        access: "public",
+        handleUploadUrl: "/api/blob/upload",
+        multipart: file.size > 4 * 1024 * 1024,
+        contentType: file.type || undefined,
+        onUploadProgress: ({ percentage }) => {
+          setProgress(Math.round(percentage));
+        },
+      });
 
+      // 2) Register lamina with Blob URL (small JSON)
+      setPhase("registering");
+      setProgress(100);
       const res = await fetch(`/api/proyectos/${proyectoId}/laminas`, {
         method: "POST",
-        body: form,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          archivoUrl: blob.url,
+          archivoNombre: file.name,
+          tamano: file.size,
+          metadata: {
+            codigo: codigo.trim() || `A-${String(Date.now()).slice(-2)}`,
+            nombre: nombre.trim() || file.name,
+            disciplina,
+            tipo,
+            escala: escala.trim() || undefined,
+            revision: revision.trim() || "A",
+          },
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -98,15 +164,38 @@ export function LaminasUpload({
             ? data.error
             : data.error
               ? JSON.stringify(data.error)
-              : `Error ${res.status} al subir`;
+              : `Error ${res.status} al registrar`;
         setError(msg);
         return;
       }
 
-      setSuccess(
-        `Lámina ${data.codigo} subida — ${data.estadoProcesamiento}` +
-          (data.disciplina ? ` (${data.disciplina})` : "")
-      );
+      // 3) Poll until processing finishes
+      setPhase("processing");
+      setSuccess(`Lámina ${data.codigo} registrada — procesando…`);
+      const final = await pollLaminaEstado(proyectoId, data.id, (estado, motivo) => {
+        if (estado === "PROCESANDO") {
+          setSuccess(`Lámina ${data.codigo} — PROCESANDO…`);
+        } else if (estado === "PENDIENTE" && motivo) {
+          setSuccess(`Lámina ${data.codigo} — PENDIENTE (${motivo})`);
+        }
+      });
+
+      if (final.estado === "ERROR") {
+        setError(
+          `Error al analizar: ${final.motivo ?? "revise el archivo"}`
+        );
+        setSuccess(null);
+      } else if (final.estado === "PENDIENTE" && final.motivo === "sin_texto_ocr_pendiente") {
+        setSuccess(
+          `Lámina ${final.codigo ?? data.codigo} subida — PENDIENTE (PDF sin texto; OCR en Fase B)`
+        );
+      } else {
+        setSuccess(
+          `Lámina ${final.codigo ?? data.codigo} — ${final.estado}` +
+            (final.disciplina ? ` (${final.disciplina})` : "")
+        );
+      }
+
       setFile(null);
       setNombre("");
       setCodigo(`A-${String(Date.now()).slice(-2)}`);
@@ -115,7 +204,9 @@ export function LaminasUpload({
       setTimeout(() => {
         setOpen(false);
         setSuccess(null);
-      }, 1800);
+        setPhase("idle");
+        setProgress(0);
+      }, 2200);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error de red al subir");
     } finally {
@@ -123,10 +214,21 @@ export function LaminasUpload({
     }
   }
 
+  const buttonLabel =
+    phase === "uploading"
+      ? `Subiendo ${progress}%…`
+      : phase === "registering"
+        ? "Registrando…"
+        : phase === "processing"
+          ? "Analizando…"
+          : loading
+            ? "Procesando…"
+            : "Subir y analizar";
+
   return (
     <div className="relative">
       <label className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium cursor-pointer hover:bg-blue-700 inline-block">
-        {loading ? "Subiendo..." : "+ Subir lámina"}
+        {loading ? buttonLabel : "+ Subir lámina"}
         <input
           ref={inputRef}
           type="file"
@@ -148,6 +250,7 @@ export function LaminasUpload({
                 <h3 className="font-semibold text-gray-900">Subir lámina</h3>
                 <p className="text-xs text-gray-500 mt-0.5 truncate max-w-[280px]">
                   {file?.name ?? "Sin archivo"}
+                  {file ? ` (${(file.size / (1024 * 1024)).toFixed(1)} MB)` : ""}
                 </p>
               </div>
               <button
@@ -167,6 +270,7 @@ export function LaminasUpload({
                   value={codigo}
                   onChange={(e) => setCodigo(e.target.value)}
                   required
+                  disabled={loading}
                 />
               </label>
               <label className="text-xs text-gray-600 col-span-1">
@@ -175,6 +279,7 @@ export function LaminasUpload({
                   className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
                   value={revision}
                   onChange={(e) => setRevision(e.target.value)}
+                  disabled={loading}
                 />
               </label>
             </div>
@@ -186,6 +291,7 @@ export function LaminasUpload({
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 required
+                disabled={loading}
               />
             </label>
 
@@ -196,6 +302,7 @@ export function LaminasUpload({
                   className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
                   value={disciplina}
                   onChange={(e) => setDisciplina(e.target.value as Disciplina)}
+                  disabled={loading}
                 >
                   {DISCIPLINAS.map((d) => (
                     <option key={d} value={d}>
@@ -210,6 +317,7 @@ export function LaminasUpload({
                   className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
                   value={tipo}
                   onChange={(e) => setTipo(e.target.value as Tipo)}
+                  disabled={loading}
                 >
                   {TIPOS.map((t) => (
                     <option key={t} value={t}>
@@ -227,12 +335,37 @@ export function LaminasUpload({
                 value={escala}
                 onChange={(e) => setEscala(e.target.value)}
                 placeholder="1:50"
+                disabled={loading}
               />
             </label>
 
+            {(phase === "uploading" || progress > 0) && loading && (
+              <div>
+                <div className="flex justify-between text-xs text-slate-500 mb-1">
+                  <span>
+                    {phase === "uploading"
+                      ? "Subiendo a Blob…"
+                      : phase === "registering"
+                        ? "Registrando…"
+                        : "Analizando…"}
+                  </span>
+                  <span>{progress}%</span>
+                </div>
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-600 transition-all duration-200"
+                    style={{
+                      width: `${phase === "processing" ? 100 : progress}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
             <p className="text-xs text-slate-500">
-              El servidor clasifica el PDF con el texto extraído y puede sobrescribir
-              disciplina/tipo. PDFs escaneados sin texto quedan en PENDIENTE.
+              Subida directa a almacenamiento (hasta 100 MB). El análisis corre en
+              segundo plano. PDFs escaneados sin texto quedan en PENDIENTE hasta OCR
+              (Fase B).
             </p>
 
             {error && (
@@ -260,7 +393,7 @@ export function LaminasUpload({
                 disabled={loading || !file}
                 className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white font-medium disabled:opacity-50"
               >
-                {loading ? "Procesando..." : "Subir y analizar"}
+                {buttonLabel}
               </button>
             </div>
           </form>

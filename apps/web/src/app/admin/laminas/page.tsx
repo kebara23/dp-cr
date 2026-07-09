@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getSession, getActiveProyecto, getTenantContext } from "@/lib/auth";
 import { prisma } from "@diego-porras/database";
 import { DISCIPLINA_COLORS, DISCIPLINA_BORDER } from "@/lib/modules";
+import { estadoBadgeClass, motivoFromMeta } from "@/lib/lamina-status";
 import { LaminasUpload } from "@/components/LaminasUpload";
 
 export default async function LaminasPage() {
@@ -83,9 +84,20 @@ export default async function LaminasPage() {
                   )}
                 </div>
                 <p className="font-medium text-gray-900">{l.nombre}</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Rev. {l.revision} — {l.estadoProcesamiento}
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-gray-400">Rev. {l.revision}</span>
+                  <span
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${estadoBadgeClass(l.estadoProcesamiento)}`}
+                    title={motivoFromMeta(l.metadataJson) ?? l.estadoProcesamiento}
+                  >
+                    {l.estadoProcesamiento}
+                  </span>
+                  {motivoFromMeta(l.metadataJson) && (
+                    <span className="text-[10px] text-amber-700 truncate max-w-[220px]" title={motivoFromMeta(l.metadataJson)}>
+                      {motivoFromMeta(l.metadataJson)}
+                    </span>
+                  )}
+                </div>
               </div>
               <a
                 href={l.archivoUrl}
