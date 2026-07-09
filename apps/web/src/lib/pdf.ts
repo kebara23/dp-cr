@@ -1,21 +1,20 @@
-import { PDFParse } from "pdf-parse";
-
 export async function extractPdfText(buffer: Buffer): Promise<{
   text: string;
   pages: number;
 }> {
-  const parser = new PDFParse({ data: buffer });
   try {
-    const result = await parser.getText();
+    const { extractText, getDocumentProxy } = await import("unpdf");
+    const data = new Uint8Array(buffer);
+    const pdf = await getDocumentProxy(data);
+    const { totalPages, text } = await extractText(pdf, { mergePages: true });
+    const merged = typeof text === "string" ? text : (text as string[]).join("\n");
     return {
-      text: result.text?.trim() ?? "",
-      pages: result.total ?? result.pages?.length ?? 0,
+      text: merged.trim(),
+      pages: totalPages ?? 0,
     };
   } catch (e) {
     console.error("PDF text extraction failed:", e);
     return { text: "", pages: 0 };
-  } finally {
-    await parser.destroy().catch(() => undefined);
   }
 }
 

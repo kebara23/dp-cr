@@ -15,7 +15,7 @@ const nextConfig = {
     "@diego-porras/agent",
   ],
   experimental: {},
-  serverExternalPackages: ["@prisma/client", "bcryptjs", "pdf-parse"],
+  serverExternalPackages: ["@prisma/client", "bcryptjs", "unpdf"],
 };
 
 module.exports = nextConfig;
