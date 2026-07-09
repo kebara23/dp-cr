@@ -30,6 +30,8 @@ export function LoginForm() {
 
     if (data.user.role === "CLIENTE") {
       router.push("/cliente");
+    } else if (data.user.role === "SUPER_ADMIN") {
+      router.push("/super-admin");
     } else {
       router.push("/admin");
     }
@@ -67,8 +69,10 @@ export function LoginForm() {
         {loading ? "Ingresando..." : "Ingresar"}
       </button>
       <p className="text-xs text-slate-500 text-center">
-        Demo Admin: admin@diego-porras.cr / admin123<br />
-        Demo Cliente: cliente@ejemplo.cr / cliente123
+        Super Admin: superadmin@dp-cr.app / super2026<br />
+        Admin Diego: admin@diego-porras.cr / admin123<br />
+        Admin Keilor: admin@keilor-barria.cr / admin123<br />
+        Cliente: cliente@ejemplo.cr / cliente123
       </p>
     </form>
   );

@@ -70,7 +70,11 @@ export async function POST(
         contenido: respuesta.respuesta,
         fuentesCitasJson: respuesta.fuentes,
         confianza: respuesta.confianza,
-        herramientasJson: { fundamento: respuesta.fundamento, requiereValidacion: respuesta.requiereValidacion },
+        herramientasJson: {
+          fundamento: respuesta.fundamento,
+          requiereValidacion: respuesta.requiereValidacion,
+          herramientas: respuesta.herramientas ?? [],
+        },
       },
     });
 

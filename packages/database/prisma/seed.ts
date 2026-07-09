@@ -1,9 +1,22 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Modulo } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 import * as fs from "fs";
 import * as path from "path";
 
 const prisma = new PrismaClient();
+
+const ALL_MODULOS: Modulo[] = [
+  "LAMINAS",
+  "CTK",
+  "MOTOR_METRADO",
+  "PRESUPUESTO",
+  "AGENTE_IA",
+  "PORTAL_CLIENTE",
+  "AUDITORIA",
+  "MANAGEMENT",
+];
+
+const KEILOR_MODULOS: Modulo[] = ["LAMINAS", "CTK", "PRESUPUESTO", "PORTAL_CLIENTE"];
 
 function loadPackFile(filename: string) {
   const paths = [
@@ -16,8 +29,17 @@ function loadPackFile(filename: string) {
   throw new Error(`Pack file not found: ${filename}`);
 }
 
+async function ensureModulos(tenantId: string, activos: Modulo[]) {
+  for (const modulo of ALL_MODULOS) {
+    await prisma.tenantModulo.upsert({
+      where: { tenantId_modulo: { tenantId, modulo } },
+      update: { activo: activos.includes(modulo) },
+      create: { tenantId, modulo, activo: activos.includes(modulo) },
+    });
+  }
+}
+
 async function main() {
-  // Idempotent seed: clear demo data
   await prisma.conflictoConocimiento.deleteMany({ where: { proyectoId: "demo-proyecto-terraba" } });
   await prisma.proyectoCliente.deleteMany({ where: { proyectoId: "demo-proyecto-terraba" } });
   const existing = await prisma.proyecto.findUnique({ where: { id: "demo-proyecto-terraba" } });
@@ -27,32 +49,83 @@ async function main() {
 
   const adminHash = await bcrypt.hash("admin123", 10);
   const clienteHash = await bcrypt.hash("cliente123", 10);
+  const superHash = await bcrypt.hash("super2026", 10);
+
+  const tenantDiego = await prisma.tenant.upsert({
+    where: { slug: "diego-porras" },
+    update: { nombre: "Diego Porras", activo: true },
+    create: {
+      id: "tenant-diego-porras",
+      nombre: "Diego Porras",
+      slug: "diego-porras",
+      activo: true,
+    },
+  });
+
+  const tenantKeilor = await prisma.tenant.upsert({
+    where: { slug: "keilor-barria" },
+    update: { nombre: "Keilor Barría", activo: true },
+    create: {
+      id: "tenant-keilor-barria",
+      nombre: "Keilor Barría",
+      slug: "keilor-barria",
+      activo: true,
+    },
+  });
+
+  await ensureModulos(tenantDiego.id, ALL_MODULOS);
+  await ensureModulos(tenantKeilor.id, KEILOR_MODULOS);
+
+  await prisma.user.upsert({
+    where: { email: "superadmin@dp-cr.app" },
+    update: { role: "SUPER_ADMIN", passwordHash: superHash, name: "Super Admin DP-CR" },
+    create: {
+      email: "superadmin@dp-cr.app",
+      passwordHash: superHash,
+      name: "Super Admin DP-CR",
+      role: "SUPER_ADMIN",
+    },
+  });
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@diego-porras.cr" },
-    update: {},
+    update: { tenantId: tenantDiego.id, role: "ADMIN", passwordHash: adminHash },
     create: {
       email: "admin@diego-porras.cr",
       passwordHash: adminHash,
-      name: "Ing. Admin",
+      name: "Ing. Diego Porras",
       role: "ADMIN",
+      tenantId: tenantDiego.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "admin@keilor-barria.cr" },
+    update: { tenantId: tenantKeilor.id, role: "ADMIN", passwordHash: adminHash },
+    create: {
+      email: "admin@keilor-barria.cr",
+      passwordHash: adminHash,
+      name: "Ing. Keilor Barría",
+      role: "ADMIN",
+      tenantId: tenantKeilor.id,
     },
   });
 
   const cliente = await prisma.user.upsert({
     where: { email: "cliente@ejemplo.cr" },
-    update: {},
+    update: { tenantId: tenantDiego.id, role: "CLIENTE", passwordHash: clienteHash },
     create: {
       email: "cliente@ejemplo.cr",
       passwordHash: clienteHash,
       name: "Cliente Demo",
       role: "CLIENTE",
+      tenantId: tenantDiego.id,
     },
   });
 
   const proyecto = await prisma.proyecto.upsert({
     where: { id: "demo-proyecto-terraba" },
-    update: {},
+    update: { tenantId: tenantDiego.id, adminId: admin.id },
     create: {
       id: "demo-proyecto-terraba",
       nombre: "Casa Residencial Terraba",
@@ -67,6 +140,7 @@ async function main() {
       cedulaProp: "1-1374-0389",
       planoCatastral: "6-0022026-2025",
       adminId: admin.id,
+      tenantId: tenantDiego.id,
     },
   });
 
@@ -223,8 +297,10 @@ async function main() {
     });
   }
 
-  console.log("Seed completado:");
-  console.log("  Admin: admin@diego-porras.cr / admin123");
+  console.log("Seed multi-tenant completado:");
+  console.log("  Super Admin: superadmin@dp-cr.app / super2026");
+  console.log("  Admin Diego: admin@diego-porras.cr / admin123 (todos los módulos)");
+  console.log("  Admin Keilor: admin@keilor-barria.cr / admin123 (sin Motor/Agente/Auditoría)");
   console.log("  Cliente: cliente@ejemplo.cr / cliente123");
   console.log("  Proyecto demo:", proyecto.nombre);
 }

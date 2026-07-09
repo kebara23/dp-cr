@@ -188,6 +188,12 @@ function detectIntent(pregunta: string): { tool: AgentToolName; params: Record<s
   if (p.includes("cercha") || p.includes("c2")) {
     return { tool: "consultar_regla", params: { codigo: "NET-01" } };
   }
+  if (
+    (p.includes("mide") || p.includes("medida") || p.includes("dimens") || p.includes("área") || p.includes("area")) &&
+    (p.includes("construc") || p.includes("obra") || p.includes("planta") || p.includes("total") || p.includes("casa") || p.includes("proyecto"))
+  ) {
+    return { tool: "consultar_tabla", params: { tablaId: "TECHO_ZINC", clave: "area_planta", focus: "area_total" } };
+  }
 
   return null;
 }
@@ -239,12 +245,14 @@ export function procesarPregunta(pregunta: string): AgentResponse {
     }
 
     return {
-      respuesta: "No encontré información suficiente en el corpus indexado para responder con certeza.",
+      respuesta:
+        "No encontré información suficiente en el corpus indexado para responder con certeza.\n\nPuede preguntar por: dosificación concreto, traslape #4, área techo zinc, altura tomas baño, carga eléctrica total, o área de planta.",
       fundamento: "Sin coincidencia en reglas, tablas o herramientas del proyecto.",
       fuentes: [],
       confianza: 0.2,
       requiereValidacion: true,
-      accionSugerida: "Suba y valide más láminas del proyecto, o reformule la pregunta con código de partida/regla.",
+      accionSugerida: "Reformule con código de regla/partida, o pregunte por área techo / dosificación / traslape.",
+      herramientas: [],
     };
   }
 
@@ -275,6 +283,8 @@ export function procesarPregunta(pregunta: string): AgentResponse {
         const cols = data.columnasJson as Record<string, number>;
         if (intent.params.focus === "traslape") {
           respuesta = `Traslape mínimo láminas zinc cal. 26: ${cols.traslape_cm} cm según lámina A-03.`;
+        } else if (intent.params.focus === "area_total") {
+          respuesta = `Área de planta de la construcción (según A-03 / TECHO_ZINC): **${cols.largo_m} × ${cols.ancho_m} m = ${cols.area_m2} m²**.\n\nEsta es el área neta de cubierta/planta indexada en el pack CTK. Para metrados detallados por zona, genere la lista de cantidades en Motor Metrado.`;
         } else {
           const area = calcularAreaConDesperdicio(cols.area_m2, cols.desperdicio_pct);
           respuesta = `Área techo: ${cols.area_m2} m² (${cols.largo_m}×${cols.ancho_m} m). Con ${cols.desperdicio_pct}% desperdicio: ${area} m² de zinc cal. 26. Traslape: ${cols.traslape_cm} cm.`;
@@ -306,17 +316,27 @@ export function procesarPregunta(pregunta: string): AgentResponse {
       }
   }
 
+  const toolLabel =
+    intent.tool === "consultar_tabla"
+      ? `${intent.tool}(${intent.params.tablaId}, ${intent.params.clave})`
+      : intent.tool === "consultar_regla"
+        ? `${intent.tool}(${intent.params.codigo})`
+        : intent.tool === "calcular_dosificacion"
+          ? `${intent.tool}(fc=${intent.params.fc}, V=${intent.params.volumen})`
+          : intent.tool === "calcular_traslape"
+            ? `${intent.tool}(${intent.params.barra})`
+            : intent.tool === "resolver_conflicto"
+              ? `${intent.tool}(${intent.params.reglaA}, ${intent.params.reglaB})`
+              : intent.tool;
+
   return {
     respuesta,
     fundamento: `Consulta procesada con herramienta ${intent.tool} sobre pack CR-RESIDENCIAL-V1.`,
     fuentes: result.fuentes,
     confianza: result.confianza,
     requiereValidacion: result.requiereValidacion ?? false,
+    herramientas: [toolLabel],
   };
 }
 
-export const SYSTEM_PROMPT = `Eres un ingeniero civil senior especializado en metrados y presupuestos de obra en Costa Rica.
-Respondes SOLO con información del corpus del proyecto y el pack CR-RESIDENCIAL-V1.
-SIEMPRE citas fuentes: código de regla, tabla, o lámina.
-Si no hay dato verificable, lo indicas explícitamente.
-Usas herramientas para cálculos numéricos; nunca inventas cantidades.`;
+export { AGENT_SYSTEM_PROMPT as SYSTEM_PROMPT, AGENT_TOOLS_META } from "./prompts";

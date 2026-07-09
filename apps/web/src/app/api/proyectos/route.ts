@@ -8,7 +8,9 @@ export async function GET() {
     const session = await requireSession();
     if (session.role === "ADMIN") {
       const proyectos = await prisma.proyecto.findMany({
-        where: { adminId: session.id },
+        where: session.tenantId
+          ? { tenantId: session.tenantId }
+          : { adminId: session.id },
         include: { _count: { select: { laminas: true, listasCantidades: true } } },
         orderBy: { updatedAt: "desc" },
       });
@@ -38,7 +40,11 @@ export async function POST(req: NextRequest) {
     }
 
     const proyecto = await prisma.proyecto.create({
-      data: { ...parsed.data, adminId: session.id },
+      data: {
+        ...parsed.data,
+        adminId: session.id,
+        tenantId: session.tenantId ?? undefined,
+      },
     });
     return NextResponse.json(proyecto, { status: 201 });
   } catch {

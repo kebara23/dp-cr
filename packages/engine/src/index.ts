@@ -1,54 +1,14 @@
 import { PARTIDAS_MVP } from "@diego-porras/shared";
 import type { MetradoInput, MetradoResult } from "@diego-porras/shared";
 
-const SACO_CEMENTO_KG = 42.5;
-const DENSIDAD_ACERO = 7850;
+export * from "./dosificacion";
+export * from "./acero";
+export * from "./techo";
+export * from "./ventanas";
+export * from "./mamposteria";
+export * from "./pintura";
 
-export function calcularDosificacion(
-  fc: number,
-  volumenM3: number,
-  proporcion: { cemento: number; arena: number; piedra: number }
-): {
-  sacosCemento: number;
-  m3Arena: number;
-  m3Piedra: number;
-  formula: string;
-} {
-  const totalPartes = proporcion.cemento + proporcion.arena + proporcion.piedra;
-  const volCemento = (volumenM3 * proporcion.cemento) / totalPartes;
-  const volArena = (volumenM3 * proporcion.arena) / totalPartes;
-  const volPiedra = (volumenM3 * proporcion.piedra) / totalPartes;
-  const sacos = Math.ceil((volCemento * 1400) / SACO_CEMENTO_KG);
-
-  return {
-    sacosCemento: sacos,
-    m3Arena: Math.round(volArena * 100) / 100,
-    m3Piedra: Math.round(volPiedra * 100) / 100,
-    formula: `V=${volumenM3}m³ × ${proporcion.cemento}:${proporcion.arena}:${proporcion.piedra}`,
-  };
-}
-
-export function calcularTraslape(
-  barra: string,
-  longitudTotalM: number,
-  traslapeM: number,
-  areaCm2: number
-): { longitudAdicionalM: number; pesoKg: number; formula: string } {
-  const numBarras = Math.ceil(longitudTotalM / 6);
-  const numTraslapes = Math.max(0, numBarras - 1);
-  const longitudAdicional = numTraslapes * traslapeM;
-  const pesoTotal = (longitudTotalM + longitudAdicional) * areaCm2 * 0.01 * DENSIDAD_ACERO / 1000;
-
-  return {
-    longitudAdicionalM: Math.round(longitudAdicional * 100) / 100,
-    pesoKg: Math.round(pesoTotal * 100) / 100,
-    formula: `L=${longitudTotalM}m + ${numTraslapes} traslapes × ${traslapeM}m, #${barra}`,
-  };
-}
-
-export function calcularAreaConDesperdicio(areaM2: number, desperdicioPct: number): number {
-  return Math.round(areaM2 * (1 + desperdicioPct / 100) * 100) / 100;
-}
+import { calcularAreaConDesperdicio } from "./techo";
 
 export function ejecutarMetrado(input: MetradoInput): MetradoResult | null {
   const partida = PARTIDAS_MVP.find((p) => p.codigo === input.partidaCodigo);
@@ -115,7 +75,15 @@ export function calcularPresupuesto(
   margenPct: number,
   impuestoPct: number
 ): {
-  lineas: Array<{ partidaCodigo: string; descripcion: string; unidad: string; cantidad: number; precioUnitario: number; subtotal: number; fuente: string }>;
+  lineas: Array<{
+    partidaCodigo: string;
+    descripcion: string;
+    unidad: string;
+    cantidad: number;
+    precioUnitario: number;
+    subtotal: number;
+    fuente: string;
+  }>;
   subtotal: number;
   impuestos: number;
   total: number;

@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { prisma, UserRole } from "@diego-porras/database";
+import { prisma, UserRole, Modulo } from "@diego-porras/database";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET ?? "diego-porras-dev-secret"
@@ -11,6 +11,15 @@ export interface SessionUser {
   email: string;
   name: string;
   role: UserRole;
+  tenantId?: string | null;
+}
+
+export interface SessionTenant {
+  id: string;
+  nombre: string;
+  slug: string;
+  logoUrl?: string | null;
+  modulos: Modulo[];
 }
 
 export async function createToken(user: SessionUser): Promise<string> {
@@ -41,6 +50,47 @@ export async function requireSession(roles?: UserRole[]): Promise<SessionUser> {
   if (!session) throw new Error("UNAUTHORIZED");
   if (roles && !roles.includes(session.role)) throw new Error("FORBIDDEN");
   return session;
+}
+
+export async function getTenantContext(session: SessionUser): Promise<SessionTenant | null> {
+  if (!session.tenantId) return null;
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: session.tenantId },
+    include: { modulos: true },
+  });
+  if (!tenant || !tenant.activo) return null;
+  return {
+    id: tenant.id,
+    nombre: tenant.nombre,
+    slug: tenant.slug,
+    logoUrl: tenant.logoUrl,
+    modulos: tenant.modulos.filter((m) => m.activo).map((m) => m.modulo),
+  };
+}
+
+export async function getActiveProyecto(session: SessionUser) {
+  if (session.role === "SUPER_ADMIN") return null;
+  const where =
+    session.role === "ADMIN"
+      ? session.tenantId
+        ? { tenantId: session.tenantId }
+        : { adminId: session.id }
+      : { clientes: { some: { userId: session.id } } };
+
+  return prisma.proyecto.findFirst({
+    where,
+    orderBy: { updatedAt: "desc" },
+    include: {
+      _count: {
+        select: {
+          laminas: true,
+          listasCantidades: true,
+          presupuestos: true,
+          documentosConocimiento: true,
+        },
+      },
+    },
+  });
 }
 
 export async function logAuditoria(

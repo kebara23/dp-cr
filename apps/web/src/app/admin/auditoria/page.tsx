@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@diego-porras/database";
@@ -14,10 +13,9 @@ export default async function AuditoriaPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      <Link href="/admin/management" className="text-sm text-primary">← Management</Link>
-      <h1 className="text-xl font-bold mt-4 mb-6">Auditoría</h1>
-      <div className="bg-white border rounded-xl overflow-hidden">
+    <div className="p-6 max-w-6xl">
+      <h1 className="text-2xl font-bold mb-6">Auditoría</h1>
+      <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-slate-50 text-left text-slate-500">
